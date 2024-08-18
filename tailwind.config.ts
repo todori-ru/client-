@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        xs: "475px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -74,7 +77,7 @@ const config = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        montserrat: ["var(--font-montserrat)", ...fontFamily.sans],
+        montserrat: ["Montserrat", ...fontFamily.sans],
       },
     },
   },

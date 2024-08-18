@@ -13,20 +13,32 @@ import {
 } from "~/ui/form"
 import { Input } from "~/ui/input"
 import { Button } from "~/ui/button"
+import ky from "ky"
 
 const credentialsSchema = z.object({
+  username: z
+    .string()
+    .min(1, { message: "This field is required." })
+    .min(3, { message: "Username must be at least 3 characters." }),
   email: z
     .string()
     .min(1, { message: "This field is required." })
-    .email("This is not a valid email."),
+    .email({ message: "This is not a valid email." }),
   password: z
     .string()
+    .min(1, { message: "This field is required." })
     .min(8, { message: "Password must be at least 8 characters." }),
 })
 
 type CredentialsSchema = z.infer<typeof credentialsSchema>
 
 const FIELDS = [
+  {
+    name: "username",
+    label: "Username",
+    placeholder: "Username",
+    description: "Username must be at least 3 symbols long",
+  },
   {
     name: "email",
     label: "Email",
@@ -47,22 +59,33 @@ export function RegisterCredentials() {
     defaultValues: {
       email: "",
       password: "",
+      username: "",
     },
   })
 
-  function onSubmit(values: CredentialsSchema) {
-    console.log(values)
+  async function onSubmit(values: CredentialsSchema) {
+    const res = await ky
+      .post("http://localhost:4000/api/v1/user/registration", {
+        method: "post",
+        json: {
+          email: values.email,
+          password: values.password,
+          username: values.username,
+        },
+      })
+      .json<{ error: string } | { token: string }>()
+    console.log(res)
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {FIELDS.map((fieldMeta) => (
           <FormField
             key={fieldMeta.name}
             control={form.control}
             name={fieldMeta.name}
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>{fieldMeta.label}</FormLabel>
                 <FormControl>
@@ -71,11 +94,16 @@ export function RegisterCredentials() {
                 {fieldMeta.description !== null ? (
                   <FormDescription>{fieldMeta.description}</FormDescription>
                 ) : null}
+                {fieldState.error ? (
+                  <p className="text-destructive">{fieldState.error.message}</p>
+                ) : null}
               </FormItem>
             )}
           />
         ))}
-        <Button type="submit">Submit</Button>
+        <Button className="w-full" type="submit">
+          Submit
+        </Button>
       </form>
     </Form>
   )
